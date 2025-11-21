@@ -1,6 +1,6 @@
-* Memento Life Calendar / 斯多葛生命日历
+# Memento Life Calendar / 斯多葛生命日历
 
-"You could leave life right now. Let that determine what you do and say and think."
+"You could leave life right now. Let that determine what you do and say and think." 
 
 “你随时可能离开这个世界。让这句话决定你的所作所为、所言所思。”
 
