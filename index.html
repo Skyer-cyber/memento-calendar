@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memento Life Calendar (Stable)</title>
+
+    <style>
+        /* --- 样式变量 --- */
+        :root {
+            --bg-dark: #1a1a1a;
+            --paper-color: #f3eabb;
+            --ink-color: #111;
+            --ink-light: #555;
+            --ui-panel-bg: #2a2a2a;
+            --ui-border: #444;
+            --ui-text: #ddd;
+            --accent: #d4af37;
+        }
+    
+        body {
+            margin: 0;
+            padding: 0;
+            /* 使用系统自带的衬线体，保证断网也能显示古典风格 */
+            font-family: "Times New Roman", "Songti SC", "SimSun", serif;
+            background-color: var(--bg-dark);
+            color: var(--ui-text);
+            display: flex;
+            flex-direction: row;
+            height: 100vh;
+            overflow: hidden;
+        }
+    
+        /* --- 左侧控制区 --- */
+        .controls {
+            width: 380px;
+            background: var(--ui-panel-bg);
+            border-right: 1px solid var(--ui-border);
+            padding: 30px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            overflow-y: auto;
+            box-shadow: 5px 0 15px rgba(0,0,0,0.3);
+            z-index: 10;
+            flex-shrink: 0;
+        }
+    
+        .controls h2 {
+            margin: 0 0 10px 0;
+            color: var(--accent);
+            font-size: 1.5rem;
+            border-bottom: 1px solid var(--ui-border);
+            padding-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+    
+        .form-group { display: flex; flex-direction: column; gap: 8px; }
+    
+        .radio-group { display: flex; gap: 15px; margin-top: 5px; }
+        .radio-group label { display: flex; align-items: center; gap: 5px; cursor: pointer; color: #fff; font-size: 0.9rem;}
+    
+        label { font-size: 0.9rem; color: #aaa; text-transform: uppercase; letter-spacing: 1px; }
+    
+        input[type="text"], input[type="number"], select, input[type="date"] {
+            background: #1a1a1a; border: 1px solid var(--ui-border); color: white;
+            padding: 10px; font-family: inherit; font-size: 1rem; border-radius: 4px;
+        }
+        /* 针对原生日期选择器的暗色模式优化 */
+        input[type="date"] {
+            color-scheme: dark;
+        }
+        
+        input:focus, select:focus { border-color: var(--accent); outline: none; }
+    
+        .hint { font-size: 0.75rem; color: #888; font-style: italic; line-height: 1.2; }
+    
+        .btn-group { margin-top: 20px; display: flex; gap: 10px; }
+        button {
+            flex: 1; padding: 12px; border: none; cursor: pointer;
+            font-family: inherit; font-weight: bold; transition: all 0.2s;
+            text-transform: uppercase; letter-spacing: 1px;
+        }
+        .btn-primary { background: var(--accent); color: #000; }
+        .btn-primary:hover { background: #e5c14d; }
+        .btn-print { background: #eee; color: #000; }
+        .btn-print:hover { background: white; }
+    
+        /* --- 右侧预览区 --- */
+        .preview-area {
+            flex: 1;
+            background: #111;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; 
+            padding: 40px;
+            overflow: auto;
+            background-image: radial-gradient(#333 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+    
+        /* A4 纸张 */
+        #paper {
+            width: 210mm;
+            height: 297mm;
+            background-color: var(--paper-color);
+            color: var(--ink-color);
+            box-shadow: 0 0 50px rgba(0,0,0,0.5);
+            padding: 15mm 20mm;
+            box-sizing: border-box;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transform-origin: top center;
+            transition: transform 0.3s;
+            margin: auto; 
+            overflow: hidden;
+        }
+    
+        /* 纸张纹理 - 使用纯 CSS 模拟，不依赖外部图片 */
+        #paper::before {
+            content: "";
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #f3eabb;
+            background-image: radial-gradient(#d3cba8 1px, transparent 1px);
+            background-size: 30px 30px;
+            opacity: 0.3;
+            pointer-events: none;
+        }
+    
+        .paper-header {
+            text-align: center;
+            margin-bottom: 5mm;
+            z-index: 1;
+            flex-shrink: 0;
+        }
+    
+        .memento-title {
+            font-family: "Times New Roman", serif;
+            font-size: 24pt;
+            letter-spacing: 6px;
+            margin: 0 0 5px 0;
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+        .memento-subtitle {
+            /* 尝试使用系统手写体，如果都没有则回退到斜体 serif */
+            font-family: "Brush Script MT", "Comic Sans MS", "Gabriola", cursive, serif;
+            font-style: italic;
+            font-size: 18pt;
+            color: var(--ink-light);
+            margin: 0;
+        }
+        .memento-dates {
+            font-family: "Courier New", Courier, monospace;
+            font-size: 9pt;
+            margin-top: 10px;
+            border-top: 1px solid #000;
+            border-bottom: 1px solid #000;
+            padding: 3px 15px;
+            display: inline-block;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+    
+        .grid-container {
+            position: relative;
+            width: 100%;
+            flex: 1;
+            z-index: 1;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            overflow: hidden;
+            padding-top: 10px;
+        }
+    
+        canvas {
+            image-rendering: -webkit-optimize-contrast;
+            display: block; 
+        }
+    
+        /* --- 打印专用样式 --- */
+        @media print {
+            @page {
+                size: A4;
+                margin: 0; 
+            }
+            body {
+                background: white;
+                height: auto;
+                display: block;
+                margin: 0;
+                padding: 0;
+            }
+            .controls, .zoom-controls { display: none !important; }
+            .preview-area {
+                padding: 0;
+                margin: 0;
+                background: none;
+                display: block;
+                overflow: visible;
+                height: auto;
+                width: 100%;
+            }
+            #paper {
+                box-shadow: none;
+                margin: 0 auto;
+                border: none;
+                width: 100%;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                background-color: #f3eabb !important; 
+                overflow: visible; 
+            }
+            /* 隐藏 Canvas，显示生成的图片 */
+            canvas { display: none !important; }
+            .print-image { display: block !important; width: 100%; }
+        }
+    
+        .zoom-controls {
+            position: absolute; bottom: 20px; right: 20px;
+            display: flex; gap: 10px; z-index: 20;
+        }
+        .zoom-btn {
+            background: rgba(0,0,0,0.5); color: white; border: none;
+            width: 30px; height: 30px; border-radius: 50%;
+            cursor: pointer; font-size: 1.2rem; line-height: 1;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="controls">
+        <h2>Configuration</h2>
+        <div class="form-group">
+            <label>Event Title</label>
+            <input type="text" id="titleInput" value="MEMENTO MORI">
+        </div>
+        <div class="form-group">
+            <label>Sub Title</label>
+            <input type="text" id="subtitleInput" value="My Life in Weeks">
+        </div>
+        <hr style="border: 0; border-top: 1px solid #444; width: 100%; margin: 10px 0;">
+        <div class="form-group">
+            <label style="color: var(--accent);">Date Input Mode</label>
+            <div class="radio-group">
+                <label><input type="radio" name="dateMode" value="duration" checked onchange="toggleDateInputs()"> Duration / Age</label>
+                <label><input type="radio" name="dateMode" value="exact" onchange="toggleDateInputs()"> Exact Date</label>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Start Date (Beginning)</label>
+            <input type="date" id="startDateInput">
+        </div>
+        <div id="durationInputs">
+            <div class="form-group">
+                <label>Duration Value</label>
+                <div style="display:flex; gap:10px;">
+                    <input type="number" id="durationValue" value="80" style="flex:1">
+                    <select id="durationUnit" style="width: 120px;">
+                        <option value="years" selected>Years (Age)</option>
+                        <option value="days">Days</option>
+                        <option value="weeks">Weeks</option>
+                        <option value="months">Months</option>
+                    </select>
+                </div>
+                <span class="hint">Enter duration (e.g., 80 Years for Life).</span>
+            </div>
+        </div>
+        <div id="exactDateInputs" style="display:none;">
+            <div class="form-group">
+                <label>End Date (Target)</label>
+                <input type="date" id="endDateInput">
+            </div>
+        </div>
+        <hr style="border: 0; border-top: 1px solid #444; width: 100%; margin: 10px 0;">
+        <div class="form-group">
+            <label style="color: var(--accent);">Grid Layout Mode</label>
+            <select id="modeSelect" onchange="toggleManualControls()">
+                <option value="smart" selected>✨ Smart Auto-Fit (Recommended)</option>
+                <option value="manual">Manual Control</option>
+            </select>
+        </div>
+        <div id="manualOptions" style="display:none; border-left: 2px solid #444; padding-left: 10px; margin-bottom:10px;">
+            <div class="form-group">
+                <label>Unit</label>
+                <select id="unitSelect">
+                    <option value="weeks" selected>Weeks</option>
+                    <option value="days">Days</option>
+                    <option value="months">Months</option>
+                    <option value="years">Years</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Columns</label>
+                <input type="number" id="colsInput" value="52">
+            </div>
+        </div>
+        <div class="form-group">
+            <label><input type="checkbox" id="prefillCheck" checked> Pre-fill Past Time</label>
+        </div>
+        <div class="btn-group">
+            <button class="btn-primary" onclick="generateGrid()">Update Preview</button>
+        </div>
+        <div class="btn-group">
+            <button class="btn-print" onclick="handlePrint()">🖨️ Print / PDF</button>
+        </div>
+    </div>
+    
+    <div class="preview-area">
+        <div id="paper">
+            <div class="paper-header">
+                <div class="memento-title" id="dispTitle">MEMENTO MORI</div>
+                <div class="memento-subtitle" id="dispSubtitle">My Life in Weeks</div>
+                <div class="memento-dates" id="dispDates">1995 - 2075</div>
+            </div>
+            
+            <div class="grid-container" id="gridContainer">
+                <canvas id="gridCanvas"></canvas>
+            </div>
+        </div>
+        <div class="zoom-controls">
+            <button class="zoom-btn" onclick="adjustZoom(-0.1)">-</button>
+            <button class="zoom-btn" onclick="adjustZoom(0.1)">+</button>
+        </div>
+    </div>
+    
+    <script>
+        // 设置默认日期 (原生日期选择器需要 'YYYY-MM-DD' 格式)
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
+        const dd = String(today.getDate()).padStart(2, '0');
+        const todayStr = `${yyyy}-${mm}-${dd}`;
+        
+        // 默认开始日期 (1995-01-01)
+        document.getElementById("startDateInput").value = "1995-01-01";
+        // 默认结束日期 (80年后)
+        document.getElementById("endDateInput").value = "2075-01-01";
+    
+        const modeSelect = document.getElementById('modeSelect');
+        const manualOptions = document.getElementById('manualOptions');
+        const durationInputs = document.getElementById('durationInputs');
+        const exactDateInputs = document.getElementById('exactDateInputs');
+        const gridContainer = document.getElementById('gridContainer');
+        const canvas = document.getElementById('gridCanvas');
+        const ctx = canvas.getContext('2d');
+        const paper = document.getElementById('paper');
+        let currentZoom = 1.0;
+    
+        function toggleDateInputs() {
+            const mode = document.querySelector('input[name="dateMode"]:checked').value;
+            if (mode === 'duration') {
+                durationInputs.style.display = 'block';
+                exactDateInputs.style.display = 'none';
+            } else {
+                durationInputs.style.display = 'none';
+                exactDateInputs.style.display = 'block';
+            }
+        }
+    
+        function toggleManualControls() {
+            if (modeSelect.value === 'manual') {
+                manualOptions.style.display = 'block';
+            } else {
+                manualOptions.style.display = 'none';
+            }
+        }
+    
+        function handlePrint() {
+            const dataUrl = canvas.toDataURL('image/png', 1.0);
+            const img = new Image();
+            img.src = dataUrl;
+            img.className = 'print-image'; 
+            img.style.width = '100%';
+            img.style.display = 'block';
+            
+            gridContainer.appendChild(img);
+            canvas.style.display = 'none';
+    
+            setTimeout(() => {
+                window.print();
+                const cleanUp = () => {
+                    if (gridContainer.contains(img)) {
+                        gridContainer.removeChild(img);
+                    }
+                    canvas.style.display = 'block';
+                    window.removeEventListener('afterprint', cleanUp);
+                };
+                window.addEventListener('afterprint', cleanUp);
+                setTimeout(cleanUp, 2000);
+            }, 100);
+        }
+    
+        function generateGrid() {
+            // 获取原生日期输入值 (字符串 "YYYY-MM-DD")
+            const startVal = document.getElementById("startDateInput").value;
+            if (!startVal) { alert("Please select a start date."); return; }
+            
+            // 解析当地时间
+            const startDate = new Date(startVal + "T00:00:00");
+            let endDate;
+            
+            const dateMode = document.querySelector('input[name="dateMode"]:checked').value;
+            if (dateMode === 'exact') {
+                const endVal = document.getElementById("endDateInput").value;
+                if (!endVal) { alert("Please select an end date."); return; }
+                endDate = new Date(endVal + "T00:00:00");
+            } else {
+                const val = parseInt(document.getElementById('durationValue').value) || 0;
+                const unit = document.getElementById('durationUnit').value;
+                endDate = new Date(startDate);
+                if (unit === 'years') endDate.setFullYear(endDate.getFullYear() + val);
+                else if (unit === 'months') endDate.setMonth(endDate.getMonth() + val);
+                else if (unit === 'weeks') endDate.setDate(endDate.getDate() + val * 7);
+                else if (unit === 'days') endDate.setDate(endDate.getDate() + val);
+            }
+    
+            if (startDate >= endDate) {
+                alert("Please check your dates."); return;
+            }
+    
+            const diffTime = Math.abs(endDate - startDate);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            const diffYears = diffDays / 365.25;
+    
+            let unit = 'weeks';
+            let cols = 52;
+            let totalBoxes = 0;
+            let passedBoxes = 0;
+    
+            if (modeSelect.value === 'smart') {
+                if (diffYears >= 3) {
+                    unit = 'weeks'; cols = 52;
+                } else {
+                    unit = 'days';
+                    if (diffDays / 10 > 30) cols = 10;
+                    else cols = 7;
+                }
+            } else {
+                unit = document.getElementById('unitSelect').value;
+                cols = parseInt(document.getElementById('colsInput').value) || 52;
+            }
+    
+            const now = new Date();
+            let daysPassedRaw = Math.floor((now - startDate) / (1000 * 60 * 60 * 24));
+            if (daysPassedRaw < 0) daysPassedRaw = 0;
+            if (now > endDate) daysPassedRaw = diffDays;
+    
+            if (unit === 'days') {
+                totalBoxes = diffDays; passedBoxes = daysPassedRaw;
+            } else if (unit === 'weeks') {
+                totalBoxes = Math.floor(diffDays / 7); passedBoxes = Math.floor(daysPassedRaw / 7);
+            } else if (unit === 'months') {
+                totalBoxes = Math.ceil(diffDays / 30.44); passedBoxes = Math.ceil(daysPassedRaw / 30.44);
+            } else if (unit === 'years') {
+                totalBoxes = Math.floor(diffYears); passedBoxes = Math.floor(daysPassedRaw / 365.25);
+            }
+    
+            if (!document.getElementById('prefillCheck').checked) passedBoxes = 0;
+            if (passedBoxes > totalBoxes) passedBoxes = totalBoxes;
+    
+            document.getElementById('dispTitle').innerText = document.getElementById('titleInput').value;
+            document.getElementById('dispSubtitle').innerText = document.getElementById('subtitleInput').value;
+            const dOpts = { year: 'numeric', month: 'short', day: 'numeric' };
+            document.getElementById('dispDates').innerText = `${startDate.toLocaleDateString('en-US', dOpts)} — ${endDate.toLocaleDateString('en-US', dOpts)}`;
+    
+            drawSmartGrid(totalBoxes, passedBoxes, cols, unit);
+        }
+    
+        function drawSmartGrid(total, passed, cols, unit) {
+            const availableWidth = gridContainer.clientWidth;
+            const availableHeight = gridContainer.clientHeight;
+            const rows = Math.ceil(total / cols);
+    
+            // 标签保留宽度: 增加到 120px，防止 "Day 1000" 被切
+            const labelReservedWidth = 120; 
+            let gap = 2;
+            let boxSize = (availableWidth - labelReservedWidth) / cols - gap; 
+            const estimatedHeight = rows * (boxSize + gap);
+            if (estimatedHeight > availableHeight) {
+                boxSize = (availableHeight / rows) - gap;
+            }
+            if (boxSize < 2) boxSize = 2; 
+    
+            const finalWidth = cols * (boxSize + gap) + labelReservedWidth;
+            const finalHeight = rows * (boxSize + gap);
+    
+            const scale = 4; 
+            canvas.width = finalWidth * scale;
+            canvas.height = finalHeight * scale;
+            canvas.style.width = finalWidth + "px";
+            canvas.style.height = finalHeight + "px";
+            
+            ctx.scale(scale, scale);
+            ctx.clearRect(0,0, canvas.width, canvas.height);
+            ctx.lineWidth = Math.max(0.5, boxSize / 15);
+            
+            // 字体自适应：增加上限 18px，防止字太大
+            let fontSize = Math.max(10, boxSize * 0.5);
+            if (fontSize > 18) fontSize = 18; // 强制限制最大字号
+            
+            ctx.font = `${fontSize}px "Times New Roman"`; // 使用通用字体
+            ctx.textBaseline = "middle";
+            ctx.textAlign = "left"; 
+    
+            for (let i = 0; i < total; i++) {
+                const col = i % cols;
+                const row = Math.floor(i / cols);
+                const x = col * (boxSize + gap);
+                const y = row * (boxSize + gap);
+    
+                if (i < passed) {
+                    ctx.fillStyle = "#222"; ctx.fillRect(x, y, boxSize, boxSize);
+                } else {
+                    ctx.strokeStyle = "#222"; ctx.strokeRect(x, y, boxSize, boxSize);
+                }
+    
+                if (col === cols - 1 || i === total - 1) {
+                    const labelInterval = rows > 60 ? 5 : (rows > 30 ? 2 : 1);
+                    if ((row + 1) % labelInterval === 0 || row === 0 || i === total - 1) {
+                        let label = "";
+                        const rowNum = row + 1;
+                        if (unit === 'weeks' && cols === 52) label = `Age ${rowNum}`; 
+                        else if (unit === 'days') {
+                            const currentDayCount = (row * cols) + col + 1;
+                            label = `Day ${currentDayCount}`;
+                        }
+                        else if (unit === 'months') label = `M ${rowNum}`;
+                        else label = `${rowNum}`;
+    
+                        const labelX = (cols * (boxSize + gap)) + 10;
+                        ctx.fillStyle = "#555";
+                        if (y + boxSize/2 < finalHeight) {
+                            ctx.fillText(label, labelX, y + boxSize/2);
+                        }
+                    }
+                }
+            }
+        }
+    
+        function adjustZoom(delta) {
+            currentZoom += delta;
+            if (currentZoom < 0.5) currentZoom = 0.5;
+            if (currentZoom > 1.5) currentZoom = 1.5;
+            paper.style.transform = `scale(${currentZoom})`;
+            const marginAdjustment = (currentZoom - 1) * 148; 
+            paper.style.marginBottom = `${marginAdjustment}mm`;
+        }
+    
+        setTimeout(generateGrid, 200);
+    </script>
+</body>
+</html>
+
