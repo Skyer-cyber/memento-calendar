@@ -32,7 +32,7 @@
         }
 
         /* ==============================
-           通用层级控制 (Layer System)
+           通用层级控制
            ============================== */
         .layer {
             position: fixed;
@@ -65,10 +65,7 @@
         /* ==============================
            第一幕：启示 (Intro)
            ============================== */
-        #intro-layer {
-            z-index: 30; /* 最高层级 */
-            padding: 20px;
-        }
+        #intro-layer { z-index: 30; padding: 20px; }
 
         #intro-layer h1 {
             font-family: "Cinzel", serif;
@@ -102,13 +99,19 @@
         .en-text { display: block; color: #ccc; letter-spacing: 0.5px; }
         .cn-text { display: block; color: #888; font-size: 0.95em; margin-top: 2px; }
 
+        /* 修复问题1：数字居中 */
         .ritual-steps {
             display: flex; gap: 50px; margin-bottom: 40px; opacity: 0;
             animation: fadeIn 1.5s ease forwards 2.5s; color: #666;
             font-size: 0.85rem; font-family: "Cinzel", serif; text-transform: uppercase; letter-spacing: 1px;
         }
         .step { display: flex; flex-direction: column; align-items: center; gap: 10px; }
-        .step-icon { font-size: 1.4rem; color: #888; border: 1px solid #333; width: 45px; height: 45px; line-height: 45px; border-radius: 50%; transition: 0.3s; }
+        .step-icon { 
+            font-size: 1.4rem; color: #888; border: 1px solid #333; 
+            width: 45px; height: 45px; border-radius: 50%; transition: 0.3s;
+            /* Flexbox 完美居中 */
+            display: flex; justify-content: center; align-items: center;
+        }
         .step:hover .step-icon { border-color: var(--accent); color: var(--accent); }
 
         .enter-btn {
@@ -129,40 +132,27 @@
         }
 
         .setup-card {
-            width: 100%;
-            max-width: 500px;
-            background: var(--ui-panel-bg);
-            border: 1px solid var(--ui-border);
-            padding: 40px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-            border-radius: 2px;
-            position: relative;
-            margin: 20px; 
+            width: 100%; max-width: 500px;
+            background: var(--ui-panel-bg); border: 1px solid var(--ui-border);
+            padding: 40px; box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            border-radius: 2px; position: relative; margin: 20px; 
         }
 
         .setup-header {
-            text-align: center;
-            margin-bottom: 20px;
-            border-bottom: 1px solid var(--ui-border);
-            padding-bottom: 20px;
+            text-align: center; margin-bottom: 20px;
+            border-bottom: 1px solid var(--ui-border); padding-bottom: 20px;
         }
         .setup-header h2 {
             margin: 0; color: var(--accent); font-family: "Cinzel", serif;
             font-size: 1.8rem; letter-spacing: 3px; font-weight: normal;
         }
         
-        /* --- 修复：仪式感说明框 --- */
+        /* 修复问题4：文案调整 */
         .intro-box {
             background: rgba(255, 255, 255, 0.03);
-            border: 1px solid #333;
-            border-left: 3px solid var(--accent);
-            padding: 15px;
-            border-radius: 2px;
-            font-size: 0.85rem;
-            line-height: 1.6;
-            color: #aaa;
-            margin-bottom: 25px;
-            text-align: left;
+            border: 1px solid #333; border-left: 3px solid var(--accent);
+            padding: 15px; border-radius: 2px; font-size: 0.85rem;
+            line-height: 1.6; color: #aaa; margin-bottom: 25px; text-align: left;
         }
         .intro-box h3 {
             color: #ddd; font-size: 0.95rem; margin: 0 0 8px 0;
@@ -170,7 +160,7 @@
         }
         .intro-box em { color: var(--accent); font-style: normal; }
 
-        /* 表单样式复用 */
+        /* Form Styles */
         .form-group { margin-bottom: 15px; display: flex; flex-direction: column; gap: 6px; }
         label { font-size: 0.8rem; color: #888; text-transform: uppercase; letter-spacing: 1.5px; display: flex; align-items: center; }
         
@@ -215,17 +205,20 @@
             background-color: #0a0a0a;
             background-image: radial-gradient(#222 1px, transparent 1px);
             background-size: 30px 30px;
-            padding-bottom: 80px; /* 给底部按钮留空间 */
+            padding-bottom: 80px;
         }
 
-        /* 纸张容器 */
         .paper-wrapper {
             padding: 40px;
             width: 100%;
-            display: flex;
-            justify-content: center;
+            /* 允许在父容器滚动，解决PC端缩放无法滚动查看的问题 */
             overflow: auto; 
             height: 100%;
+            display: flex;
+            /* 使用 block 布局配合 margin: auto 实现居中，方便缩放计算 */
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
         }
 
         #paper {
@@ -234,11 +227,14 @@
             box-shadow: 0 0 100px rgba(0,0,0,0.9);
             padding: 15mm 20mm; box-sizing: border-box;
             position: relative; display: flex; flex-direction: column; align-items: center;
-            transform-origin: top center; margin: auto; overflow: hidden;
+            transform-origin: top center; 
+            /* margin: auto 在 flex 容器中实现水平居中 */
+            margin: auto; 
+            overflow: hidden;
             flex-shrink: 0; 
+            transition: transform 0.3s ease;
         }
 
-        /* 纸张纹理 */
         #paper::before {
             content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
             background-color: #f3eabb;
@@ -253,7 +249,6 @@
         .grid-container { position: relative; width: 100%; flex: 1; z-index: 1; display: flex; justify-content: center; align-items: flex-start; overflow: hidden; padding-top: 10px; }
         canvas { image-rendering: -webkit-optimize-contrast; display: block; }
 
-        /* 底部悬浮操作栏 */
         .action-bar {
             position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
             display: flex; gap: 20px; z-index: 100;
@@ -272,14 +267,13 @@
         .action-btn.primary { color: var(--accent); font-weight: bold; }
         .action-btn.primary:hover { color: #fff; text-shadow: 0 0 10px var(--accent); }
 
-        /* --- 修复：缩放按钮 --- */
         .zoom-controls {
-            position: absolute; bottom: 30px; right: 30px; display: flex; gap: 15px; z-index: 100;
+            position: fixed; bottom: 100px; right: 30px; display: flex; flex-direction: column; gap: 10px; z-index: 100;
         }
         .zoom-btn {
             background: rgba(255,255,255,0.1); color: #fff; border: 1px solid #444;
-            width: 36px; height: 36px; border-radius: 50%; cursor: pointer;
-            font-size: 1.2rem; line-height: 1; transition: 0.2s; display: flex; align-items: center; justify-content: center; padding-bottom: 4px;
+            width: 40px; height: 40px; border-radius: 50%; cursor: pointer;
+            font-size: 1.5rem; line-height: 1; transition: 0.2s; display: flex; align-items: center; justify-content: center;
         }
         .zoom-btn:hover { background: #fff; color: #000; }
 
@@ -288,15 +282,24 @@
             #intro-layer h1 { font-size: 2rem; }
             .manifesto { font-size: 0.95rem; }
             .ritual-steps { gap: 20px; font-size: 0.7rem; }
-            .step-icon { width: 40px; height: 40px; line-height: 40px; font-size: 1.2rem; }
+            .step-icon { width: 40px; height: 40px; font-size: 1.2rem; }
             
             .setup-card { width: 95%; padding: 25px 15px; margin-top: 50px; margin-bottom: 50px;}
             
-            .paper-wrapper { padding: 10px; align-items: flex-start; overflow-x: hidden; }
-            #paper { transform: scale(0.45); transform-origin: top center; margin-top: 20px; margin-bottom: -50%; }
+            /* 修复问题3：手机端对齐方式修改 */
+            .paper-wrapper { 
+                padding: 20px; 
+                align-items: flex-start; /* 顶部对齐 */
+                justify-content: center;
+                overflow-x: hidden;
+                overflow-y: auto;
+            }
+            
+            /* 手机端不需要那么大的阴影 */
+            #paper { box-shadow: 0 0 30px rgba(0,0,0,0.5); }
             
             .action-bar { bottom: 20px; padding: 8px 15px; width: 90%; justify-content: space-around; }
-            .zoom-controls { display: none; } /* 手机端隐藏缩放，用手势 */
+            .zoom-controls { display: none; } /* 手机用手势 */
         }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -305,8 +308,8 @@
         @media print {
             @page { size: A4; margin: 0; }
             body { background: white; display: block; margin: 0; padding: 0; overflow: visible; }
-            .layer { display: none !important; } /* Hide all layers by default */
-            #result-layer { display: block !important; opacity: 1 !important; visibility: visible !important; position: relative; background: none; } /* Show result */
+            .layer { display: none !important; } 
+            #result-layer { display: block !important; opacity: 1 !important; visibility: visible !important; position: relative; background: none; padding: 0; } 
             .paper-wrapper { padding: 0; margin: 0; overflow: visible; height: auto; display: block; }
             #paper { box-shadow: none; margin: 0 auto; border: none; width: 100%; transform: none !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; background-color: #f3eabb !important; overflow: visible; }
             .action-bar, .zoom-controls { display: none !important; }
@@ -356,13 +359,13 @@
                 <p>Define the boundaries of your time.</p>
             </div>
 
-            <!-- 修复：恢复仪式感说明 -->
+            <!-- 修复问题4：文案调整 -->
             <div class="intro-box">
-                <h3>🕯️ The Ritual / 仪式</h3>
+                <h3>🕯️ Perception of Time / 感知时间</h3>
                 <p>
-                    这个工具的价值不在于屏幕，而在于<strong>纸张</strong>。<br>
-                    配置完成后，请将画面<strong>截图或打印</strong>，贴在墙上。<br>
-                    <em>去感受时间的物理流逝。</em>
+                    我们往往高估了生命的长度，却低估了当下的流逝。<br>
+                    配置并生成你的“生命网格”，将其<strong>打印或截屏</strong>，放在触手可及之处。<br>
+                    <em>每划去一格，便是与时间的一次对话。</em>
                 </p>
             </div>
 
@@ -456,10 +459,9 @@
             </div>
         </div>
 
-        <!-- 修复：恢复缩放按钮 -->
         <div class="zoom-controls">
-            <button class="zoom-btn" onclick="adjustZoom(-0.1)">-</button>
             <button class="zoom-btn" onclick="adjustZoom(0.1)">+</button>
+            <button class="zoom-btn" onclick="adjustZoom(-0.1)">-</button>
         </div>
 
         <div class="action-bar">
@@ -485,6 +487,7 @@
         const canvas = document.getElementById('gridCanvas');
         const ctx = canvas.getContext('2d');
         const paper = document.getElementById('paper');
+        let currentZoom = 1.0;
 
         // --- Layer Management ---
         function switchLayer(fromId, toId) {
@@ -495,9 +498,14 @@
             fromLayer.classList.add('fade-out');
             
             setTimeout(() => {
-                fromLayer.classList.remove('fade-out'); // reset for back nav
+                fromLayer.classList.remove('fade-out'); 
                 toLayer.classList.add('active');
-            }, 500); // wait for css transition
+                
+                // Reset zoom when entering result layer
+                if (toId === 'result-layer') {
+                    resetZoomForDevice();
+                }
+            }, 500); 
         }
 
         function generateAndShowResult() {
@@ -528,7 +536,6 @@
         }
 
         function handlePrint() {
-            // Clean up previous print images if any
             const oldImgs = gridContainer.querySelectorAll('.print-image');
             oldImgs.forEach(img => img.remove());
 
@@ -550,7 +557,6 @@
                     window.removeEventListener('afterprint', cleanUp);
                 };
                 window.addEventListener('afterprint', cleanUp);
-                // Fallback cleanup
                 setTimeout(cleanUp, 3000);
             }, 300);
         }
@@ -622,17 +628,14 @@
         }
 
         function drawSmartGrid(total, passed, cols, unit) {
-            const availableWidth = 794 - 150; // Approx A4 Width px (minus padding/margin safe area)
-            const availableHeight = 1123 - 300; // Approx A4 Height px (minus header safe area)
+            const availableWidth = 794 - 150; 
+            const availableHeight = 1123 - 300;
             
             const rows = Math.ceil(total / cols);
             const labelReservedWidth = 120; 
             let gap = 2;
-            
-            // Calculate box size based on width constraint
             let boxSize = (availableWidth - labelReservedWidth) / cols - gap; 
             
-            // Check height constraint
             const estimatedHeight = rows * (boxSize + gap);
             if (estimatedHeight > availableHeight) {
                 boxSize = (availableHeight / rows) - gap;
@@ -692,18 +695,39 @@
             }
         }
 
+        /* 修复问题2 & 3：缩放逻辑重写 */
+        function resetZoomForDevice() {
+            // 手机端：自动宽度适配 (Fit Width)
+            if (window.innerWidth < 900) {
+                const containerWidth = document.querySelector('.paper-wrapper').clientWidth;
+                // A4 宽度约为 794px
+                let scale = (containerWidth - 20) / 794; 
+                currentZoom = scale;
+            } else {
+                // PC端：默认 1.0
+                currentZoom = 1.0;
+            }
+            applyZoom();
+        }
+
         function adjustZoom(delta) {
             currentZoom += delta;
             if (currentZoom < 0.3) currentZoom = 0.3;
-            if (currentZoom > 2.0) currentZoom = 2.0;
+            if (currentZoom > 2.5) currentZoom = 2.5;
+            applyZoom();
+        }
+
+        function applyZoom() {
             paper.style.transform = `scale(${currentZoom})`;
-            // 简单的 margin 调整，保证缩放后还能居中显示
-            if (currentZoom < 1) {
-                paper.style.marginTop = '20px';
-                paper.style.marginBottom = '20px';
-            } else {
-                const marginAdjustment = (currentZoom - 1) * 148; 
+            // 在 PC 端为了保证居中，需要动态调整 Margin
+            if (window.innerWidth >= 900) {
+                const marginAdjustment = (currentZoom - 1) * 148; // half height approx
                 paper.style.marginBottom = `${marginAdjustment}mm`;
+                paper.style.marginTop = `${marginAdjustment}mm`;
+            } else {
+                // 手机端不需要纵向 margin hack，只需 transform-origin 顶部居中
+                paper.style.marginTop = '20px';
+                paper.style.marginBottom = '50px';
             }
         }
     </script>
