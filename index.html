@@ -2,17 +2,17 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Memento Life Calendar</title>
     
     <style>
         /* --- 样式变量 --- */
         :root {
-            --bg-dark: #0f0f0f;
+            --bg-dark: #050505;
             --paper-color: #f3eabb;
             --ink-color: #111;
             --ink-light: #555;
-            --ui-panel-bg: #1a1a1a;
+            --ui-panel-bg: #111;
             --ui-border: #333;
             --ui-text: #ccc;
             --accent: #d4af37; /* 金色 */
@@ -32,166 +32,126 @@
         }
 
         /* ==============================
-           第一幕：沉浸式哲学开场 (The Manifesto)
+           通用层级控制 (Layer System)
            ============================== */
-        #intro-layer {
+        .layer {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background-color: #050505;
-            z-index: 9999;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            padding: 40px;
-            transition: opacity 1.5s ease, visibility 1.5s;
-        }
-
-        .fade-out {
+            overflow-y: auto;
+            transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
             opacity: 0;
             visibility: hidden;
             pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--bg-dark);
+            z-index: 1;
         }
 
-        /* 标题动画 */
+        .layer.active {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+            z-index: 10;
+        }
+
+        .layer.fade-out {
+            opacity: 0;
+            transform: scale(1.05);
+        }
+
+        /* ==============================
+           第一幕：启示 (Intro)
+           ============================== */
+        #intro-layer {
+            z-index: 30; /* 最高层级 */
+            padding: 20px;
+        }
+
         #intro-layer h1 {
             font-family: "Cinzel", serif;
-            font-size: 3.5rem; /* 稍微调小一点以留出空间 */
+            font-size: 3.5rem;
             color: var(--accent);
             letter-spacing: 8px;
             margin-bottom: 20px;
             text-transform: uppercase;
             font-weight: normal;
-            opacity: 0;
-            animation: fadeIn 1.5s ease forwards 0.5s;
             text-shadow: 0 0 20px rgba(212, 175, 55, 0.2);
+            animation: fadeIn 1.5s ease forwards 0.5s; opacity: 0;
         }
 
-        /* 核心哲学文本 */
         .manifesto {
             font-family: "Times New Roman", "Songti SC", serif;
             font-size: 1.1rem;
             color: #bbb;
             line-height: 1.8;
             max-width: 700px;
-            margin-bottom: 30px; /* 减小间距，把按钮往上提 */
-            opacity: 0;
-            animation: fadeIn 1.5s ease forwards 1.5s;
+            margin-bottom: 30px;
+            text-align: center;
+            animation: fadeIn 1.5s ease forwards 1.5s; opacity: 0;
         }
         
-        /* 引用句样式 */
         .quote-box {
-            font-size: 1.3rem;
-            color: #eee;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid #333;
-            font-style: italic;
+            font-size: 1.3rem; color: #eee; margin-bottom: 30px;
+            padding-bottom: 20px; border-bottom: 1px solid #333; font-style: italic;
         }
-        .quote-cn {
-            display: block;
-            margin-top: 8px;
-            font-size: 1.2rem;
-            color: var(--accent);
-            font-style: normal;
-        }
-
-        /* 逐句对照样式 */
-        .bilingual-text p {
-            margin-bottom: 15px;
-        }
+        .quote-cn { display: block; margin-top: 8px; font-size: 1.2rem; color: var(--accent); font-style: normal; }
+        .bilingual-text p { margin-bottom: 15px; }
         .en-text { display: block; color: #ccc; letter-spacing: 0.5px; }
         .cn-text { display: block; color: #888; font-size: 0.95em; margin-top: 2px; }
 
-        /* 仪式步骤图标 */
         .ritual-steps {
-            display: flex;
-            gap: 50px;
-            margin-bottom: 40px; /* 减小间距 */
-            opacity: 0;
-            animation: fadeIn 1.5s ease forwards 2.5s;
-            color: #666;
-            font-size: 0.85rem;
-            font-family: "Cinzel", serif;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+            display: flex; gap: 50px; margin-bottom: 40px; opacity: 0;
+            animation: fadeIn 1.5s ease forwards 2.5s; color: #666;
+            font-size: 0.85rem; font-family: "Cinzel", serif; text-transform: uppercase; letter-spacing: 1px;
         }
         .step { display: flex; flex-direction: column; align-items: center; gap: 10px; }
         .step-icon { font-size: 1.4rem; color: #888; border: 1px solid #333; width: 45px; height: 45px; line-height: 45px; border-radius: 50%; transition: 0.3s; }
         .step:hover .step-icon { border-color: var(--accent); color: var(--accent); }
 
-        /* 进入按钮 */
-        #intro-layer .enter-btn {
-            background: transparent;
-            border: 1px solid var(--accent);
-            color: var(--accent);
-            padding: 14px 45px;
-            font-family: "Cinzel", serif;
-            font-size: 1rem;
-            letter-spacing: 3px;
-            cursor: pointer;
-            transition: all 0.4s ease;
-            opacity: 0;
-            animation: fadeIn 1.5s ease forwards 3.0s; /* 出现时间稍微提前 */
-            text-transform: uppercase;
-            margin-top: 10px; /* 微调位置 */
+        .enter-btn {
+            background: transparent; border: 1px solid var(--accent); color: var(--accent);
+            padding: 14px 45px; font-family: "Cinzel", serif; font-size: 1rem; letter-spacing: 3px;
+            cursor: pointer; transition: all 0.4s ease; text-transform: uppercase; margin-top: 10px;
+            animation: fadeIn 1.5s ease forwards 3.0s; opacity: 0;
         }
-
-        #intro-layer .enter-btn:hover {
-            background: var(--accent);
-            color: #000;
-            box-shadow: 0 0 30px rgba(212, 175, 55, 0.4);
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        .enter-btn:hover { background: var(--accent); color: #000; box-shadow: 0 0 30px rgba(212, 175, 55, 0.4); }
 
         /* ==============================
-           第二幕：主应用界面
+           第二幕：构建 (Setup)
            ============================== */
-        .main-app {
-            display: flex;
-            flex-direction: row;
-            height: 100%;
-            width: 100%;
-            opacity: 0;
-            transition: opacity 1.5s ease 0.5s;
+        #setup-layer {
+            z-index: 20;
+            background-image: radial-gradient(#222 1px, transparent 1px);
+            background-size: 40px 40px;
         }
-        .main-app.visible { opacity: 1; }
 
-        /* --- 左侧控制区 --- */
-        .controls {
-            width: 420px;
+        .setup-card {
+            width: 100%;
+            max-width: 500px;
             background: var(--ui-panel-bg);
-            border-right: 1px solid var(--ui-border);
-            padding: 30px 25px;
-            display: flex;
-            flex-direction: column;
-            gap: 20px; 
-            overflow-y: auto;
-            z-index: 10;
-            flex-shrink: 0;
+            border: 1px solid var(--ui-border);
+            padding: 40px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            border-radius: 2px;
+            position: relative;
+            margin: 20px; 
+        }
+
+        .setup-header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--ui-border);
+            padding-bottom: 20px;
+        }
+        .setup-header h2 {
+            margin: 0; color: var(--accent); font-family: "Cinzel", serif;
+            font-size: 1.8rem; letter-spacing: 3px; font-weight: normal;
         }
         
-        .controls::-webkit-scrollbar { width: 5px; }
-        .controls::-webkit-scrollbar-track { background: #1a1a1a; }
-        .controls::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
-
-        .controls h2 {
-            margin: 0 0 10px 0;
-            color: var(--accent);
-            font-size: 1.6rem;
-            border-bottom: 1px solid var(--ui-border);
-            padding-bottom: 15px;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            font-family: "Cinzel", serif;
-        }
-
-        /* --- 顶部引导卡片 --- */
+        /* --- 修复：仪式感说明框 --- */
         .intro-box {
             background: rgba(255, 255, 255, 0.03);
             border: 1px solid #333;
@@ -201,87 +161,81 @@
             font-size: 0.85rem;
             line-height: 1.6;
             color: #aaa;
+            margin-bottom: 25px;
+            text-align: left;
         }
         .intro-box h3 {
-            color: #ddd;
-            font-size: 0.95rem;
-            margin: 0 0 10px 0;
-            font-family: "Cinzel", serif;
-            letter-spacing: 1px;
+            color: #ddd; font-size: 0.95rem; margin: 0 0 8px 0;
+            font-family: "Cinzel", serif; letter-spacing: 1px;
         }
-        .intro-box p { margin-bottom: 8px; }
-        .intro-box strong { color: #fff; }
         .intro-box em { color: var(--accent); font-style: normal; }
 
-        .form-group { display: flex; flex-direction: column; gap: 8px; }
-
-        .radio-group { display: flex; gap: 20px; margin-top: 5px; }
-        .radio-group label { display: flex; align-items: center; gap: 8px; cursor: pointer; color: #ccc; font-size: 0.9rem;}
-
+        /* 表单样式复用 */
+        .form-group { margin-bottom: 15px; display: flex; flex-direction: column; gap: 6px; }
         label { font-size: 0.8rem; color: #888; text-transform: uppercase; letter-spacing: 1.5px; display: flex; align-items: center; }
-
-        /* --- 信息图标 --- */
-        .info-icon {
-            display: inline-block; width: 14px; height: 14px;
-            border: 1px solid #555; border-radius: 50%;
-            text-align: center; line-height: 14px;
-            font-size: 10px; font-family: "Times New Roman", serif; font-style: italic;
-            color: #666; margin-left: 8px; cursor: help; position: relative;
-            transition: all 0.2s;
+        
+        input[type="text"], input[type="number"], select, input[type="date"] {
+            background: #0a0a0a; border: 1px solid #333; color: #eee;
+            padding: 12px; font-family: inherit; font-size: 1rem; border-radius: 2px;
+            transition: border-color 0.3s; width: 100%;
         }
-        .info-icon:hover { border-color: var(--accent); color: var(--accent); }
+        input:focus, select:focus { border-color: var(--accent); outline: none; background: #151515; }
+        
+        .radio-group { display: flex; gap: 20px; margin-top: 5px; }
+        .radio-group label { cursor: pointer; color: #ccc; font-size: 0.9rem; text-transform: none; letter-spacing: 0;}
 
-        /* Tooltip 样式 */
-        .tooltip-content {
-            display: none; position: absolute; left: 24px; top: -8px;
-            width: 240px; background: rgba(20, 20, 20, 0.98);
-            border: 1px solid #444; padding: 12px;
-            border-radius: 2px; color: #ccc; font-size: 0.75rem;
-            line-height: 1.5; z-index: 1000; text-transform: none; letter-spacing: 0;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8); pointer-events: none;
-            white-space: normal; text-align: left;
+        .info-icon {
+            display: inline-block; width: 14px; height: 14px; border: 1px solid #555; border-radius: 50%;
+            text-align: center; line-height: 14px; font-size: 10px; font-family: serif; font-style: italic;
+            color: #666; margin-left: 8px; cursor: help; position: relative;
         }
         .info-icon:hover .tooltip-content { display: block; }
-        .tooltip-content strong { color: var(--accent); font-weight: bold; display: block; margin-bottom: 4px; font-size: 0.8rem;}
-
-        /* --- 输入框 --- */
-        input[type="text"], input[type="number"], select, input[type="date"] {
-            background: #111; border: 1px solid #333; color: #eee;
-            padding: 10px 12px; font-family: inherit; font-size: 1rem; border-radius: 2px;
-            transition: border-color 0.3s;
+        .tooltip-content {
+            display: none; position: absolute; left: 24px; top: -8px; width: 240px;
+            background: rgba(20, 20, 20, 0.98); border: 1px solid #444; padding: 12px;
+            border-radius: 2px; color: #ccc; font-size: 0.75rem; line-height: 1.5;
+            z-index: 100; box-shadow: 0 10px 30px rgba(0,0,0,0.8); pointer-events: none;
+            text-transform: none; letter-spacing: 0; white-space: normal; text-align: left;
         }
-        input[type="date"] { color-scheme: dark; }
-        input:focus, select:focus { border-color: var(--accent); outline: none; background: #151515; }
+        .tooltip-content strong { color: var(--accent); display: block; margin-bottom: 4px; }
 
-        .btn-group { margin-top: 20px; display: flex; gap: 15px; }
-        button {
-            flex: 1; padding: 14px; border: none; cursor: pointer;
-            font-family: "Cinzel", serif; font-weight: bold; transition: all 0.3s;
-            text-transform: uppercase; letter-spacing: 1px; font-size: 0.85rem;
-            border-radius: 2px;
+        .generate-btn {
+            width: 100%; margin-top: 20px; padding: 15px;
+            background: var(--accent); color: #000; border: none;
+            font-family: "Cinzel", serif; font-weight: bold; font-size: 1.1rem; letter-spacing: 2px;
+            cursor: pointer; transition: 0.3s; text-transform: uppercase;
         }
-        .btn-primary { background: var(--accent); color: #000; }
-        .btn-primary:hover { background: #fff; }
-        .btn-print { background: #222; color: #aaa; border: 1px solid #444; }
-        .btn-print:hover { border-color: #fff; color: #fff; }
+        .generate-btn:hover { background: #fff; box-shadow: 0 0 20px rgba(212, 175, 55, 0.4); }
 
-        /* --- 右侧预览区 --- */
-        .preview-area {
-            flex: 1; background: #0a0a0a;
-            display: flex; justify-content: center; align-items: flex-start; 
-            padding: 50px; overflow: auto;
+        /* ==============================
+           第三幕：揭示 (Result)
+           ============================== */
+        #result-layer {
+            z-index: 10;
+            background-color: #0a0a0a;
             background-image: radial-gradient(#222 1px, transparent 1px);
             background-size: 30px 30px;
+            padding-bottom: 80px; /* 给底部按钮留空间 */
         }
 
-        /* A4 纸张 */
+        /* 纸张容器 */
+        .paper-wrapper {
+            padding: 40px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            overflow: auto; 
+            height: 100%;
+        }
+
         #paper {
             width: 210mm; height: 297mm;
             background-color: var(--paper-color); color: var(--ink-color);
-            box-shadow: 0 0 80px rgba(0,0,0,0.8);
+            box-shadow: 0 0 100px rgba(0,0,0,0.9);
             padding: 15mm 20mm; box-sizing: border-box;
             position: relative; display: flex; flex-direction: column; align-items: center;
-            transform-origin: top center; transition: transform 0.3s; margin: auto; overflow: hidden;
+            transform-origin: top center; margin: auto; overflow: hidden;
+            flex-shrink: 0; 
         }
 
         /* 纸张纹理 */
@@ -293,65 +247,87 @@
         }
 
         .paper-header { text-align: center; margin-bottom: 8mm; z-index: 1; flex-shrink: 0; }
-        .memento-title {
-            font-family: "Times New Roman", serif; font-size: 26pt; letter-spacing: 8px;
-            margin: 0 0 8px 0; text-transform: uppercase; font-weight: 700;
-        }
-        .memento-subtitle {
-            font-family: "Brush Script MT", cursive, serif; font-style: italic;
-            font-size: 18pt; color: var(--ink-light); margin: 0;
-        }
-        .memento-dates {
-            font-family: "Courier New", monospace; font-size: 9pt; margin-top: 15px;
-            border-top: 1px solid #000; border-bottom: 1px solid #000; padding: 4px 20px;
-            display: inline-block; text-transform: uppercase; letter-spacing: 2px;
-        }
-
-        .grid-container {
-            position: relative; width: 100%; flex: 1; z-index: 1;
-            display: flex; justify-content: center; align-items: flex-start;
-            overflow: hidden; padding-top: 10px;
-        }
+        .memento-title { font-family: "Times New Roman", serif; font-size: 26pt; letter-spacing: 8px; margin: 0 0 8px 0; text-transform: uppercase; font-weight: 700; }
+        .memento-subtitle { font-family: "Brush Script MT", cursive, serif; font-style: italic; font-size: 18pt; color: var(--ink-light); margin: 0; }
+        .memento-dates { font-family: "Courier New", monospace; font-size: 9pt; margin-top: 15px; border-top: 1px solid #000; border-bottom: 1px solid #000; padding: 4px 20px; display: inline-block; text-transform: uppercase; letter-spacing: 2px; }
+        .grid-container { position: relative; width: 100%; flex: 1; z-index: 1; display: flex; justify-content: center; align-items: flex-start; overflow: hidden; padding-top: 10px; }
         canvas { image-rendering: -webkit-optimize-contrast; display: block; }
 
-        /* --- 打印专用 --- */
-        @media print {
-            @page { size: A4; margin: 0; }
-            body { background: white; display: block; margin: 0; padding: 0; }
-            .controls, .zoom-controls, #intro-layer { display: none !important; }
-            .preview-area { padding: 0; margin: 0; background: none; display: block; overflow: visible; height: auto; width: 100%; }
-            .main-app { display: block; opacity: 1; }
-            #paper { box-shadow: none; margin: 0 auto; border: none; width: 100%; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; background-color: #f3eabb !important; overflow: visible; }
-            canvas { display: none !important; }
-            .print-image { display: block !important; width: 100%; }
+        /* 底部悬浮操作栏 */
+        .action-bar {
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+            display: flex; gap: 20px; z-index: 100;
+            background: rgba(20, 20, 20, 0.9);
+            padding: 10px 20px; border-radius: 50px; border: 1px solid #333;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
+        .action-btn {
+            background: transparent; border: none; color: #ccc;
+            font-family: "Cinzel", serif; font-size: 0.9rem; cursor: pointer;
+            padding: 8px 15px; text-transform: uppercase; letter-spacing: 1px;
+            transition: 0.2s;
+        }
+        .action-btn:hover { color: #fff; }
+        .action-btn.primary { color: var(--accent); font-weight: bold; }
+        .action-btn.primary:hover { color: #fff; text-shadow: 0 0 10px var(--accent); }
+
+        /* --- 修复：缩放按钮 --- */
         .zoom-controls {
-            position: absolute; bottom: 30px; right: 30px; display: flex; gap: 15px; z-index: 20;
+            position: absolute; bottom: 30px; right: 30px; display: flex; gap: 15px; z-index: 100;
         }
         .zoom-btn {
             background: rgba(255,255,255,0.1); color: #fff; border: 1px solid #444;
             width: 36px; height: 36px; border-radius: 50%; cursor: pointer;
-            font-size: 1.2rem; line-height: 1; transition: 0.2s;
+            font-size: 1.2rem; line-height: 1; transition: 0.2s; display: flex; align-items: center; justify-content: center; padding-bottom: 4px;
         }
         .zoom-btn:hover { background: #fff; color: #000; }
+
+        /* 移动端适配 */
+        @media (max-width: 900px) {
+            #intro-layer h1 { font-size: 2rem; }
+            .manifesto { font-size: 0.95rem; }
+            .ritual-steps { gap: 20px; font-size: 0.7rem; }
+            .step-icon { width: 40px; height: 40px; line-height: 40px; font-size: 1.2rem; }
+            
+            .setup-card { width: 95%; padding: 25px 15px; margin-top: 50px; margin-bottom: 50px;}
+            
+            .paper-wrapper { padding: 10px; align-items: flex-start; overflow-x: hidden; }
+            #paper { transform: scale(0.45); transform-origin: top center; margin-top: 20px; margin-bottom: -50%; }
+            
+            .action-bar { bottom: 20px; padding: 8px 15px; width: 90%; justify-content: space-around; }
+            .zoom-controls { display: none; } /* 手机端隐藏缩放，用手势 */
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Print Mode */
+        @media print {
+            @page { size: A4; margin: 0; }
+            body { background: white; display: block; margin: 0; padding: 0; overflow: visible; }
+            .layer { display: none !important; } /* Hide all layers by default */
+            #result-layer { display: block !important; opacity: 1 !important; visibility: visible !important; position: relative; background: none; } /* Show result */
+            .paper-wrapper { padding: 0; margin: 0; overflow: visible; height: auto; display: block; }
+            #paper { box-shadow: none; margin: 0 auto; border: none; width: 100%; transform: none !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; background-color: #f3eabb !important; overflow: visible; }
+            .action-bar, .zoom-controls { display: none !important; }
+            canvas { display: none !important; }
+            .print-image { display: block !important; width: 100%; }
+        }
     </style>
 </head>
 <body>
 
-    <!-- 第一幕：哲学开场 -->
-    <div id="intro-layer">
+    <!-- ACT 1: INTRO -->
+    <div id="intro-layer" class="layer active">
         <h1>Memento Mori</h1>
-        
         <div class="manifesto">
             <div class="quote-box">
                 "How we spend our days is, of course, how we spend our lives."
                 <span class="quote-cn">“如何过好今天，便如何过好今生。”</span>
             </div>
-            
             <div class="bilingual-text">
                 <p>
-                    <span class="en-text">This is not just a digital app. This is a generator for a <strong>physical artifact</strong>.</span>
+                    <span class="en-text">This is not just a digital app. It is a generator for a <strong>physical artifact</strong>.</span>
                     <span class="cn-text">这不是一个电子应用，而是一个实体信物的生成器。</span>
                 </p>
                 <p>
@@ -364,106 +340,66 @@
                 </p>
             </div>
         </div>
-
         <div class="ritual-steps">
             <div class="step"><div class="step-icon">1</div>Generate</div>
             <div class="step"><div class="step-icon">2</div>Print</div>
             <div class="step"><div class="step-icon">3</div>Live</div>
         </div>
-
-        <button class="enter-btn" onclick="enterApp()">Begin the Ritual</button>
+        <button class="enter-btn" onclick="switchLayer('intro-layer', 'setup-layer')">Begin the Ritual</button>
     </div>
 
-    <!-- 第二幕：主应用 -->
-    <div class="main-app" id="mainApp">
-        <div class="controls">
-            <h2>Configuration</h2>
-            
+    <!-- ACT 2: SETUP -->
+    <div id="setup-layer" class="layer">
+        <div class="setup-card">
+            <div class="setup-header">
+                <h2>Configuration</h2>
+                <p>Define the boundaries of your time.</p>
+            </div>
+
+            <!-- 修复：恢复仪式感说明 -->
             <div class="intro-box">
                 <h3>🕯️ The Ritual / 仪式</h3>
                 <p>
-                    这个工具的价值不在于屏幕，而在于<strong>纸张</strong>。
-                    请在配置完成后，将右侧画面<strong>截图 (Screenshot)</strong> 并打印出来。
-                </p>
-                <p>
-                    贴在床头或书桌前，每过一天（或一周），亲手涂黑一个格子。
+                    这个工具的价值不在于屏幕，而在于<strong>纸张</strong>。<br>
+                    配置完成后，请将画面<strong>截图或打印</strong>，贴在墙上。<br>
                     <em>去感受时间的物理流逝。</em>
                 </p>
             </div>
 
-            <hr style="border: 0; border-top: 1px solid #333; width: 100%; margin: 20px 0;">
-
-            <!-- 1. Event Title -->
+            <!-- Form Inputs -->
             <div class="form-group">
-                <label>
-                    Event Title
-                    <span class="info-icon">i
-                        <span class="tooltip-content">
-                            <strong>主标题</strong><br>
-                            你想要铭记的主题。如 "MEMENTO MORI" 或 "MY 2025"。
-                        </span>
-                    </span>
-                </label>
+                <label>Event Title <span class="info-icon">i<span class="tooltip-content"><strong>Main Header</strong>Top of the page title.</span></span></label>
                 <input type="text" id="titleInput" value="MEMENTO MORI">
             </div>
 
-            <!-- 2. Sub Title -->
             <div class="form-group">
-                <label>
-                    Sub Title
-                    <span class="info-icon">i
-                        <span class="tooltip-content">
-                            <strong>副标题 (手写体)</strong><br>
-                            一段格言，或者对时间的注脚。
-                        </span>
-                    </span>
-                </label>
+                <label>Sub Title <span class="info-icon">i<span class="tooltip-content"><strong>Sub Header</strong>Handwritten style quote or description.</span></span></label>
                 <input type="text" id="subtitleInput" value="My Life in Weeks">
             </div>
 
-            <!-- 3. Date Mode -->
-            <div class="form-group" style="margin-top: 10px;">
-                <label style="color: #eee;">
-                    Date Mode
-                    <span class="info-icon">i
-                        <span class="tooltip-content">
-                            <strong>Duration / Age</strong>: 输入时长(如80年)，适合人生日历。<br>
-                            <strong>Exact Date</strong>: 精确起止日期，适合项目倒计时。
-                        </span>
-                    </span>
-                </label>
+            <div class="form-group">
+                <label style="color: var(--accent);">Date Mode</label>
                 <div class="radio-group">
-                    <label><input type="radio" name="dateMode" value="duration" checked onchange="toggleDateInputs()"> Duration / Age</label>
+                    <label><input type="radio" name="dateMode" value="duration" checked onchange="toggleDateInputs()"> Duration (Age)</label>
                     <label><input type="radio" name="dateMode" value="exact" onchange="toggleDateInputs()"> Exact Date</label>
                 </div>
             </div>
 
-            <!-- 4. Start Date -->
             <div class="form-group">
-                <label>
-                    Start Date
-                    <span class="info-icon">i
-                        <span class="tooltip-content">
-                            <strong>开始日期</strong><br>
-                            如果是人生日历，请填你的生日。<br>
-                            如果是倒计时，请填今天或项目开始日。
-                        </span>
-                    </span>
-                </label>
+                <label>Start Date</label>
                 <input type="date" id="startDateInput">
             </div>
 
-            <!-- Dynamic Inputs -->
             <div id="durationInputs">
                 <div class="form-group">
                     <label>Duration</label>
                     <div style="display:flex; gap:10px;">
                         <input type="number" id="durationValue" value="80" style="flex:1">
                         <select id="durationUnit" style="width: 110px;">
-                            <option value="years" selected>Years (岁)</option>
-                            <option value="days">Days (天)</option>
-                            <option value="weeks">Weeks (周)</option>
-                            <option value="months">Months (月)</option>
+                            <option value="years" selected>Years</option>
+                            <option value="days">Days</option>
+                            <option value="weeks">Weeks</option>
+                            <option value="months">Months</option>
                         </select>
                     </div>
                 </div>
@@ -474,56 +410,40 @@
                     <input type="date" id="endDateInput">
                 </div>
             </div>
-            
-            <hr style="border: 0; border-top: 1px solid #333; width: 100%; margin: 20px 0;">
 
-            <!-- 5. Grid Mode -->
-            <div class="form-group">
-                <label style="color: #eee;">
-                    Layout
-                    <span class="info-icon">i
-                        <span class="tooltip-content">
-                            <strong>Smart Auto-Fit (推荐)</strong>: 自动选择最适合 A4 纸张密度的格子单位。<br>
-                            <strong>Manual</strong>: 手动强行指定列数。
-                        </span>
-                    </span>
-                </label>
+            <div class="form-group" style="margin-top:15px;">
+                <label style="color: #888;">Layout Options <span class="info-icon">i<span class="tooltip-content"><strong>Smart Auto-Fit</strong>: Automatically picks the best grid unit to fit A4 paper.</span></span></label>
                 <select id="modeSelect" onchange="toggleManualControls()">
-                    <option value="smart" selected>✨ Smart Auto-Fit (智能适配)</option>
-                    <option value="manual">Manual Control (手动)</option>
+                    <option value="smart" selected>✨ Smart Auto-Fit (Recommended)</option>
+                    <option value="manual">Manual Control</option>
                 </select>
             </div>
-            
-            <div id="manualOptions" style="display:none; border-left: 2px solid #444; padding-left: 15px; margin-bottom:10px;">
+
+            <div id="manualOptions" style="display:none; padding-left:10px; border-left:2px solid #333; margin-bottom:10px;">
                 <div class="form-group">
                     <label>Unit</label>
-                    <select id="unitSelect">
-                        <option value="weeks" selected>Weeks</option>
-                        <option value="days">Days</option>
-                        <option value="months">Months</option>
-                        <option value="years">Years</option>
-                    </select>
+                    <select id="unitSelect"><option value="weeks">Weeks</option><option value="days">Days</option><option value="months">Months</option><option value="years">Years</option></select>
                 </div>
                 <div class="form-group">
                     <label>Columns</label>
                     <input type="number" id="colsInput" value="52">
                 </div>
             </div>
-            
+
             <div class="form-group">
-                <label style="text-transform: none; letter-spacing: 0; color: #ccc;">
+                <label style="text-transform: none; letter-spacing: 0; color: #ccc; margin-top: 5px;">
                     <input type="checkbox" id="prefillCheck" checked style="width: auto; margin-right: 8px;"> 
-                    Pre-fill Past Time (涂黑已逝去的时间)
+                    Pre-fill Past Time (涂黑已逝时间)
                 </label>
             </div>
-            
-            <div class="btn-group">
-                <button class="btn-primary" onclick="generateGrid()">Update Preview</button>
-                <button class="btn-print" onclick="handlePrint()">🖨️ Print / Screenshot</button>
-            </div>
-        </div>
 
-        <div class="preview-area">
+            <button class="generate-btn" onclick="generateAndShowResult()">Reveal My Life Grid</button>
+        </div>
+    </div>
+
+    <!-- ACT 3: RESULT -->
+    <div id="result-layer" class="layer">
+        <div class="paper-wrapper">
             <div id="paper">
                 <div class="paper-header">
                     <div class="memento-title" id="dispTitle">MEMENTO MORI</div>
@@ -534,16 +454,26 @@
                     <canvas id="gridCanvas"></canvas>
                 </div>
             </div>
-            <div class="zoom-controls">
-                <button class="zoom-btn" onclick="adjustZoom(-0.1)">-</button>
-                <button class="zoom-btn" onclick="adjustZoom(0.1)">+</button>
-            </div>
+        </div>
+
+        <!-- 修复：恢复缩放按钮 -->
+        <div class="zoom-controls">
+            <button class="zoom-btn" onclick="adjustZoom(-0.1)">-</button>
+            <button class="zoom-btn" onclick="adjustZoom(0.1)">+</button>
+        </div>
+
+        <div class="action-bar">
+            <button class="action-btn" onclick="switchLayer('result-layer', 'setup-layer')">&larr; Edit</button>
+            <button class="action-btn primary" onclick="handlePrint()">🖨️ Print / Save</button>
         </div>
     </div>
 
     <script>
-        // 默认日期设置
+        // --- Init ---
         const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
+        const dd = String(today.getDate()).padStart(2, '0');
         document.getElementById("startDateInput").value = "1995-01-01";
         document.getElementById("endDateInput").value = "2075-01-01";
 
@@ -555,20 +485,29 @@
         const canvas = document.getElementById('gridCanvas');
         const ctx = canvas.getContext('2d');
         const paper = document.getElementById('paper');
-        let currentZoom = 1.0;
 
-        // 开场动画
-        function enterApp() {
-            const introLayer = document.getElementById('intro-layer');
-            const mainApp = document.getElementById('mainApp');
-            introLayer.classList.add('fade-out');
-            mainApp.classList.add('visible');
+        // --- Layer Management ---
+        function switchLayer(fromId, toId) {
+            const fromLayer = document.getElementById(fromId);
+            const toLayer = document.getElementById(toId);
+            
+            fromLayer.classList.remove('active');
+            fromLayer.classList.add('fade-out');
+            
             setTimeout(() => {
-                generateGrid();
-                introLayer.style.display = 'none';
-            }, 1500);
+                fromLayer.classList.remove('fade-out'); // reset for back nav
+                toLayer.classList.add('active');
+            }, 500); // wait for css transition
         }
 
+        function generateAndShowResult() {
+            const success = generateGrid();
+            if (success) {
+                switchLayer('setup-layer', 'result-layer');
+            }
+        }
+
+        // --- Logic ---
         function toggleDateInputs() {
             const mode = document.querySelector('input[name="dateMode"]:checked').value;
             if (mode === 'duration') {
@@ -589,14 +528,20 @@
         }
 
         function handlePrint() {
+            // Clean up previous print images if any
+            const oldImgs = gridContainer.querySelectorAll('.print-image');
+            oldImgs.forEach(img => img.remove());
+
             const dataUrl = canvas.toDataURL('image/png', 1.0);
             const img = new Image();
             img.src = dataUrl;
             img.className = 'print-image'; 
             img.style.width = '100%';
             img.style.display = 'block';
+            
             gridContainer.appendChild(img);
             canvas.style.display = 'none';
+
             setTimeout(() => {
                 window.print();
                 const cleanUp = () => {
@@ -605,16 +550,14 @@
                     window.removeEventListener('afterprint', cleanUp);
                 };
                 window.addEventListener('afterprint', cleanUp);
-                setTimeout(cleanUp, 2000);
-            }, 100);
+                // Fallback cleanup
+                setTimeout(cleanUp, 3000);
+            }, 300);
         }
 
         function generateGrid() {
             const startVal = document.getElementById("startDateInput").value;
-            if (!startVal) { 
-                if (document.getElementById('intro-layer').style.display !== 'none') return;
-                alert("Please select a start date."); return; 
-            }
+            if (!startVal) { alert("Please select a start date."); return false; }
             
             const startDate = new Date(startVal + "T00:00:00");
             let endDate;
@@ -622,7 +565,7 @@
             const dateMode = document.querySelector('input[name="dateMode"]:checked').value;
             if (dateMode === 'exact') {
                 const endVal = document.getElementById("endDateInput").value;
-                if (!endVal) { alert("Please select an end date."); return; }
+                if (!endVal) { alert("Please select an end date."); return false; }
                 endDate = new Date(endVal + "T00:00:00");
             } else {
                 const val = parseInt(document.getElementById('durationValue').value) || 0;
@@ -634,7 +577,7 @@
                 else if (unit === 'days') endDate.setDate(endDate.getDate() + val);
             }
 
-            if (startDate >= endDate) { alert("Start date must be before end date."); return; }
+            if (startDate >= endDate) { alert("Start date must be before end date."); return false; }
 
             const diffTime = Math.abs(endDate - startDate);
             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -675,18 +618,25 @@
             document.getElementById('dispDates').innerText = `${startDate.toLocaleDateString('en-US', dOpts)} — ${endDate.toLocaleDateString('en-US', dOpts)}`;
 
             drawSmartGrid(totalBoxes, passedBoxes, cols, unit);
+            return true;
         }
 
         function drawSmartGrid(total, passed, cols, unit) {
-            const availableWidth = gridContainer.clientWidth;
-            const availableHeight = gridContainer.clientHeight;
+            const availableWidth = 794 - 150; // Approx A4 Width px (minus padding/margin safe area)
+            const availableHeight = 1123 - 300; // Approx A4 Height px (minus header safe area)
+            
             const rows = Math.ceil(total / cols);
-
             const labelReservedWidth = 120; 
             let gap = 2;
+            
+            // Calculate box size based on width constraint
             let boxSize = (availableWidth - labelReservedWidth) / cols - gap; 
+            
+            // Check height constraint
             const estimatedHeight = rows * (boxSize + gap);
-            if (estimatedHeight > availableHeight) boxSize = (availableHeight / rows) - gap;
+            if (estimatedHeight > availableHeight) {
+                boxSize = (availableHeight / rows) - gap;
+            }
             if (boxSize < 2) boxSize = 2; 
 
             const finalWidth = cols * (boxSize + gap) + labelReservedWidth;
@@ -744,11 +694,17 @@
 
         function adjustZoom(delta) {
             currentZoom += delta;
-            if (currentZoom < 0.5) currentZoom = 0.5;
-            if (currentZoom > 1.5) currentZoom = 1.5;
+            if (currentZoom < 0.3) currentZoom = 0.3;
+            if (currentZoom > 2.0) currentZoom = 2.0;
             paper.style.transform = `scale(${currentZoom})`;
-            const marginAdjustment = (currentZoom - 1) * 148; 
-            paper.style.marginBottom = `${marginAdjustment}mm`;
+            // 简单的 margin 调整，保证缩放后还能居中显示
+            if (currentZoom < 1) {
+                paper.style.marginTop = '20px';
+                paper.style.marginBottom = '20px';
+            } else {
+                const marginAdjustment = (currentZoom - 1) * 148; 
+                paper.style.marginBottom = `${marginAdjustment}mm`;
+            }
         }
     </script>
 </body>
