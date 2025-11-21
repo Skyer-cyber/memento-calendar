@@ -85,13 +85,13 @@ Memento Mori（向死而生）并非关于悲观，而是关于清醒。在数�
 
 ### 使用方法
 
-访问 在线演示。
+1. 访问 在线演示。
 
-输入开始日期（如生日）和时长。
+2. 输入开始日期（如生日）和时长。
 
-点击 "Print / PDF" 按钮保存。
+3. 点击 "Print / PDF" 按钮保存。
 
-把它贴在墙上，开始你的修行。
+4. 把它贴在墙上，开始你的修行。
 
 <div align="center">
 <sub>MIT License. Made by Skyer-Cyber.</sub>
