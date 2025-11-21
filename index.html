@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Memento Life Calendar (Stable)</title>
+    <title>Memento Life Calendar</title>
     
     <style>
         /* --- 样式变量 --- */
@@ -18,17 +18,112 @@
             --accent: #d4af37;
         }
 
+        * { box-sizing: border-box; }
+
         body {
             margin: 0;
             padding: 0;
             font-family: "Times New Roman", "Songti SC", "SimSun", serif;
             background-color: var(--bg-dark);
             color: var(--ui-text);
-            display: flex;
-            flex-direction: row;
             height: 100vh;
             overflow: hidden;
+            /* 取消 body 的 flex，改由内部容器控制 */
+            display: block; 
         }
+
+        /* ==============================
+           第一幕：电影感开场页 (Intro Layer)
+           ============================== */
+        #intro-layer {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #080808; /* 极深的黑 */
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            transition: opacity 1.5s cubic-bezier(0.4, 0, 0.2, 1), transform 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 20px;
+        }
+
+        /* 隐藏状态 (JS控制) */
+        .fade-out {
+            opacity: 0;
+            pointer-events: none;
+            transform: scale(1.05); /* 稍微放大淡出，增加空间感 */
+        }
+
+        #intro-layer h1 {
+            font-family: "Cinzel", serif;
+            font-size: 3rem;
+            color: var(--accent);
+            letter-spacing: 5px;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            font-weight: normal;
+            opacity: 0;
+            animation: fadeIn 2s ease forwards 0.5s;
+        }
+
+        #intro-layer blockquote {
+            font-family: "Times New Roman", serif;
+            font-size: 1.1rem;
+            color: #888;
+            font-style: italic;
+            max-width: 600px;
+            line-height: 1.6;
+            margin-bottom: 50px;
+            opacity: 0;
+            animation: fadeIn 2s ease forwards 1.5s;
+        }
+
+        #intro-layer .enter-btn {
+            background: transparent;
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            padding: 12px 40px;
+            font-family: "Cinzel", serif;
+            font-size: 1rem;
+            letter-spacing: 3px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            opacity: 0;
+            animation: fadeIn 2s ease forwards 2.5s; /* 最晚出现 */
+            text-transform: uppercase;
+        }
+
+        #intro-layer .enter-btn:hover {
+            background: var(--accent);
+            color: #000;
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+
+        /* ==============================
+           第二幕：主应用界面 (Main App)
+           ============================== */
+        .main-app {
+            display: flex;
+            flex-direction: row;
+            height: 100%;
+            width: 100%;
+            opacity: 0; /* 初始隐藏 */
+            transition: opacity 1s ease 0.5s; /* 延迟显示，等开场页淡出 */
+        }
+        
+        .main-app.visible {
+            opacity: 1;
+        }
+
+        /* --- 以下为原有的样式 --- */
 
         /* --- 左侧控制区 --- */
         .controls {
@@ -38,14 +133,13 @@
             padding: 25px 20px;
             display: flex;
             flex-direction: column;
-            gap: 15px; /* 稍微减小间距 */
+            gap: 15px; 
             overflow-y: auto;
             box-shadow: 5px 0 15px rgba(0,0,0,0.3);
             z-index: 10;
             flex-shrink: 0;
         }
         
-        /* 美化滚动条 */
         .controls::-webkit-scrollbar { width: 6px; }
         .controls::-webkit-scrollbar-track { background: #1a1a1a; }
         .controls::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
@@ -60,7 +154,7 @@
             letter-spacing: 2px;
         }
 
-        /* --- 顶部引导卡片 (新) --- */
+        /* --- 顶部引导卡片 --- */
         .intro-box {
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid #444;
@@ -100,7 +194,7 @@
 
         label { font-size: 0.85rem; color: #aaa; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; }
 
-        /* --- 信息图标与 Tooltip 样式 (优化版) --- */
+        /* --- 信息图标与 Tooltip 样式 --- */
         .info-icon {
             display: inline-block;
             width: 14px;
@@ -131,13 +225,13 @@
             position: absolute;
             left: 24px;
             top: -5px;
-            width: 220px; /* 宽度稍微收窄 */
+            width: 220px; 
             background: rgba(15, 15, 15, 0.98);
             border: 1px solid #555;
             padding: 10px;
             border-radius: 4px;
             color: #ddd;
-            font-size: 0.75rem; /* 缩小字号 */
+            font-size: 0.75rem;
             line-height: 1.4;
             z-index: 1000;
             text-transform: none;
@@ -175,6 +269,31 @@
         .btn-primary:hover { background: #e5c14d; }
         .btn-print { background: #eee; color: #000; }
         .btn-print:hover { background: white; }
+
+        /* --- 说明区域样式 --- */
+        .info-section {
+            margin-top: 30px;
+            border-top: 1px dashed #444;
+            padding-top: 20px;
+            color: #999;
+            font-size: 0.85rem;
+            line-height: 1.6;
+        }
+        .info-section h3 {
+            color: var(--accent);
+            font-size: 1rem;
+            margin-bottom: 10px;
+            font-family: "Cinzel", serif;
+        }
+        .info-section p { margin-bottom: 15px; }
+        .info-section blockquote {
+            border-left: 3px solid var(--accent);
+            margin: 0 0 15px 0;
+            padding-left: 10px;
+            color: #bbb;
+            font-style: italic;
+        }
+        .info-section em { color: #fff; font-style: normal; font-weight: bold; }
 
         /* --- 右侧预览区 --- */
         .preview-area {
@@ -274,8 +393,9 @@
         @media print {
             @page { size: A4; margin: 0; }
             body { background: white; display: block; margin: 0; padding: 0; }
-            .controls, .zoom-controls { display: none !important; }
+            .controls, .zoom-controls, #intro-layer { display: none !important; } /* 确保打印时不显示开场页 */
             .preview-area { padding: 0; margin: 0; background: none; display: block; overflow: visible; height: auto; width: 100%; }
+            .main-app { display: block; opacity: 1; } /* 强制显示主应用 */
             #paper { box-shadow: none; margin: 0 auto; border: none; width: 100%; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; background-color: #f3eabb !important; overflow: visible; }
             canvas { display: none !important; }
             .print-image { display: block !important; width: 100%; }
@@ -294,185 +414,229 @@
 </head>
 <body>
 
-    <div class="controls">
-        <h2>Configuration</h2>
-        
-        <!-- 顶部：最佳实践与仪式感 -->
-        <div class="intro-box">
-            <h3>🕯️ Ritual & Best Practice <br> 仪式感与最佳实践</h3>
-            <p>
-                <strong>How to use (使用方法):</strong><br>
-                <span class="highlight">Generate (生成)</span> &rarr; 
-                <span class="highlight">Screenshot (截屏)</span> &rarr; 
-                <span class="highlight">Print (打印)</span> &rarr; 
-                <span class="highlight">Fill (涂黑)</span>
-            </p>
-            <p style="margin-bottom: 0; color: #999;">
-                *Recommendation: Take a <strong>High-Res Screenshot</strong> for the best print quality. <br>
-                *建议直接<strong>截屏保存</strong>右侧画面，所见即所得，打印效果最佳。
-            </p>
-        </div>
-
-        <hr style="border: 0; border-top: 1px solid #444; width: 100%; margin: 15px 0;">
-
-        <!-- 1. Event Title -->
-        <div class="form-group">
-            <label>
-                Event Title
-                <span class="info-icon">i
-                    <span class="tooltip-content">
-                        <strong>Main Header / 主标题</strong>
-                        Display at the very top.<br>
-                        显示在羊皮纸最顶端。
-                    </span>
-                </span>
-            </label>
-            <input type="text" id="titleInput" value="MEMENTO MORI">
-        </div>
-
-        <!-- 2. Sub Title -->
-        <div class="form-group">
-            <label>
-                Sub Title
-                <span class="info-icon">i
-                    <span class="tooltip-content">
-                        <strong>Sub Header / 副标题</strong>
-                        Handwritten style, for quotes or description.<br>
-                        手写体风格，用于写名言或说明。
-                    </span>
-                </span>
-            </label>
-            <input type="text" id="subtitleInput" value="My Life in Weeks">
-        </div>
-
-        <!-- 3. Date Input Mode -->
-        <div class="form-group">
-            <label style="color: var(--accent);">
-                Date Input Mode
-                <span class="info-icon">i
-                    <span class="tooltip-content">
-                        <strong>Duration / Age</strong><br>
-                        Auto-calculate end date. For Life Calendar (e.g. 80 Years).<br>
-                        自动计算结束日期。适合人生日历 (如输入80年)。<br><br>
-                        <strong>Exact Date</strong><br>
-                        Specific start & end dates. For Countdowns.<br>
-                        指定开始和结束日期。适合倒计时。
-                    </span>
-                </span>
-            </label>
-            <div class="radio-group">
-                <label><input type="radio" name="dateMode" value="duration" checked onchange="toggleDateInputs()"> Duration / Age</label>
-                <label><input type="radio" name="dateMode" value="exact" onchange="toggleDateInputs()"> Exact Date</label>
-            </div>
-        </div>
-
-        <!-- 4. Start Date -->
-        <div class="form-group">
-            <label>
-                Start Date (Beginning)
-                <span class="info-icon">i
-                    <span class="tooltip-content">
-                        <strong>Start / 开始日期</strong>
-                        The date of the first square.<br>
-                        第一个格子代表的日期。
-                    </span>
-                </span>
-            </label>
-            <input type="date" id="startDateInput">
-        </div>
-
-        <div id="durationInputs">
-            <div class="form-group">
-                <label>Duration Value</label>
-                <div style="display:flex; gap:10px;">
-                    <input type="number" id="durationValue" value="80" style="flex:1">
-                    <select id="durationUnit" style="width: 120px;">
-                        <option value="years" selected>Years (Age)</option>
-                        <option value="days">Days</option>
-                        <option value="weeks">Weeks</option>
-                        <option value="months">Months</option>
-                    </select>
-                </div>
-                <span class="hint">Enter duration (e.g., 80 Years for Life).</span>
-            </div>
-        </div>
-        <div id="exactDateInputs" style="display:none;">
-            <div class="form-group">
-                <label>End Date (Target)</label>
-                <input type="date" id="endDateInput">
-            </div>
-        </div>
-        
-        <hr style="border: 0; border-top: 1px solid #444; width: 100%; margin: 15px 0;">
-
-        <div class="form-group">
-            <label style="color: var(--accent);">
-                Grid Layout Mode
-                <span class="info-icon">i
-                    <span class="tooltip-content">
-                        <strong>Smart Auto-Fit (推荐)</strong><br>
-                        Auto-selects unit to fit A4 paper perfectly.<br>
-                        自动选择单位以完美填充A4纸。<br><br>
-                        <strong>Manual Control</strong><br>
-                        Custom columns & units.<br>
-                        自定义列数和单位。
-                    </span>
-                </span>
-            </label>
-            <select id="modeSelect" onchange="toggleManualControls()">
-                <option value="smart" selected>✨ Smart Auto-Fit (Recommended)</option>
-                <option value="manual">Manual Control</option>
-            </select>
-        </div>
-        
-        <div id="manualOptions" style="display:none; border-left: 2px solid #444; padding-left: 10px; margin-bottom:10px;">
-            <div class="form-group">
-                <label>Unit</label>
-                <select id="unitSelect">
-                    <option value="weeks" selected>Weeks</option>
-                    <option value="days">Days</option>
-                    <option value="months">Months</option>
-                    <option value="years">Years</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Columns</label>
-                <input type="number" id="colsInput" value="52">
-            </div>
-        </div>
-        
-        <div class="form-group">
-            <label><input type="checkbox" id="prefillCheck" checked> Pre-fill Past Time</label>
-        </div>
-        
-        <div class="btn-group">
-            <button class="btn-primary" onclick="generateGrid()">Update Preview</button>
-        </div>
-        <div class="btn-group">
-            <button class="btn-print" onclick="handlePrint()">🖨️ Print / Screenshot</button>
-        </div>
+    <!-- 第一幕：开场页 -->
+    <div id="intro-layer">
+        <h1>Memento Life Calendar</h1>
+        <blockquote>
+            "You could leave life right now. Let that determine what you do and say and think."<br><br>
+            “你随时可能离开这个世界。让这句话决定你的所作所为、所言所思。”<br>
+            — Marcus Aurelius
+        </blockquote>
+        <button class="enter-btn" onclick="enterApp()">Enter Studio</button>
     </div>
 
-    <div class="preview-area">
-        <div id="paper">
-            <div class="paper-header">
-                <div class="memento-title" id="dispTitle">MEMENTO MORI</div>
-                <div class="memento-subtitle" id="dispSubtitle">My Life in Weeks</div>
-                <div class="memento-dates" id="dispDates">1995 - 2075</div>
+    <!-- 第二幕：主应用 (初始隐藏) -->
+    <div class="main-app" id="mainApp">
+        <div class="controls">
+            <h2>Configuration</h2>
+            
+            <!-- 顶部：最佳实践与仪式感 -->
+            <div class="intro-box">
+                <h3>🕯️ Ritual & Best Practice <br> 仪式感与最佳实践</h3>
+                <p>
+                    <strong>How to use (使用方法):</strong><br>
+                    <span class="highlight">Generate (生成)</span> &rarr; 
+                    <span class="highlight">Screenshot (截屏)</span> &rarr; 
+                    <span class="highlight">Print (打印)</span> &rarr; 
+                    <span class="highlight">Fill (涂黑)</span>
+                </p>
+                <p style="margin-bottom: 0; color: #999;">
+                    *Recommendation: Take a <strong>High-Res Screenshot</strong> for the best print quality. <br>
+                    *建议直接<strong>截屏保存</strong>右侧画面，所见即所得，打印效果最佳。
+                </p>
+            </div>
+
+            <hr style="border: 0; border-top: 1px solid #444; width: 100%; margin: 15px 0;">
+
+            <!-- 1. Event Title -->
+            <div class="form-group">
+                <label>
+                    Event Title
+                    <span class="info-icon">i
+                        <span class="tooltip-content">
+                            <strong>Main Header / 主标题</strong>
+                            Display at the very top.<br>
+                            显示在羊皮纸最顶端。
+                        </span>
+                    </span>
+                </label>
+                <input type="text" id="titleInput" value="MEMENTO MORI">
+            </div>
+
+            <!-- 2. Sub Title -->
+            <div class="form-group">
+                <label>
+                    Sub Title
+                    <span class="info-icon">i
+                        <span class="tooltip-content">
+                            <strong>Sub Header / 副标题</strong>
+                            Handwritten style, for quotes or description.<br>
+                            手写体风格，用于写名言或说明。
+                        </span>
+                    </span>
+                </label>
+                <input type="text" id="subtitleInput" value="My Life in Weeks">
+            </div>
+
+            <!-- 3. Date Input Mode -->
+            <div class="form-group">
+                <label style="color: var(--accent);">
+                    Date Input Mode
+                    <span class="info-icon">i
+                        <span class="tooltip-content">
+                            <strong>Duration / Age</strong><br>
+                            Auto-calculate end date. For Life Calendar (e.g. 80 Years).<br>
+                            自动计算结束日期。适合人生日历 (如输入80年)。<br><br>
+                            <strong>Exact Date</strong><br>
+                            Specific start & end dates. For Countdowns.<br>
+                            指定开始和结束日期。适合倒计时。
+                        </span>
+                    </span>
+                </label>
+                <div class="radio-group">
+                    <label><input type="radio" name="dateMode" value="duration" checked onchange="toggleDateInputs()"> Duration / Age</label>
+                    <label><input type="radio" name="dateMode" value="exact" onchange="toggleDateInputs()"> Exact Date</label>
+                </div>
+            </div>
+
+            <!-- 4. Start Date -->
+            <div class="form-group">
+                <label>
+                    Start Date (Beginning)
+                    <span class="info-icon">i
+                        <span class="tooltip-content">
+                            <strong>Start / 开始日期</strong>
+                            The date of the first square.<br>
+                            第一个格子代表的日期。
+                        </span>
+                    </span>
+                </label>
+                <input type="date" id="startDateInput">
+            </div>
+
+            <div id="durationInputs">
+                <div class="form-group">
+                    <label>Duration Value</label>
+                    <div style="display:flex; gap:10px;">
+                        <input type="number" id="durationValue" value="80" style="flex:1">
+                        <select id="durationUnit" style="width: 120px;">
+                            <option value="years" selected>Years (Age)</option>
+                            <option value="days">Days</option>
+                            <option value="weeks">Weeks</option>
+                            <option value="months">Months</option>
+                        </select>
+                    </div>
+                    <span class="hint">Enter duration (e.g., 80 Years for Life).</span>
+                </div>
+            </div>
+            <div id="exactDateInputs" style="display:none;">
+                <div class="form-group">
+                    <label>End Date (Target)</label>
+                    <input type="date" id="endDateInput">
+                </div>
             </div>
             
-            <div class="grid-container" id="gridContainer">
-                <canvas id="gridCanvas"></canvas>
+            <hr style="border: 0; border-top: 1px solid #444; width: 100%; margin: 15px 0;">
+
+            <div class="form-group">
+                <label style="color: var(--accent);">
+                    Grid Layout Mode
+                    <span class="info-icon">i
+                        <span class="tooltip-content">
+                            <strong>Smart Auto-Fit (推荐)</strong><br>
+                            Auto-selects unit to fit A4 paper perfectly.<br>
+                            自动选择单位以完美填充A4纸。<br><br>
+                            <strong>Manual Control</strong><br>
+                            Custom columns & units.<br>
+                            自定义列数和单位。
+                        </span>
+                    </span>
+                </label>
+                <select id="modeSelect" onchange="toggleManualControls()">
+                    <option value="smart" selected>✨ Smart Auto-Fit (Recommended)</option>
+                    <option value="manual">Manual Control</option>
+                </select>
+            </div>
+            
+            <div id="manualOptions" style="display:none; border-left: 2px solid #444; padding-left: 10px; margin-bottom:10px;">
+                <div class="form-group">
+                    <label>Unit</label>
+                    <select id="unitSelect">
+                        <option value="weeks" selected>Weeks</option>
+                        <option value="days">Days</option>
+                        <option value="months">Months</option>
+                        <option value="years">Years</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Columns</label>
+                    <input type="number" id="colsInput" value="52">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label><input type="checkbox" id="prefillCheck" checked> Pre-fill Past Time</label>
+            </div>
+            
+            <div class="btn-group">
+                <button class="btn-primary" onclick="generateGrid()">Update Preview</button>
+            </div>
+            <div class="btn-group">
+                <button class="btn-print" onclick="handlePrint()">🖨️ Print / Screenshot</button>
+            </div>
+
+            <!-- 底部说明区域 (保留哲学部分) -->
+            <div class="info-section">
+                <h3>Design Philosophy / 设计哲学</h3>
+                <blockquote>
+                    "You could leave life right now..."<br>
+                    “你随时可能离开这个世界...”
+                </blockquote>
+                <p>
+                    This is a Stoic tool to visualize the passage of time. By generating a precise grid, it forces a confrontation with reality: <em>Time is finite.</em>
+                </p>
             </div>
         </div>
-        <div class="zoom-controls">
-            <button class="zoom-btn" onclick="adjustZoom(-0.1)">-</button>
-            <button class="zoom-btn" onclick="adjustZoom(0.1)">+</button>
+
+        <div class="preview-area">
+            <div id="paper">
+                <div class="paper-header">
+                    <div class="memento-title" id="dispTitle">MEMENTO MORI</div>
+                    <div class="memento-subtitle" id="dispSubtitle">My Life in Weeks</div>
+                    <div class="memento-dates" id="dispDates">1995 - 2075</div>
+                </div>
+                
+                <div class="grid-container" id="gridContainer">
+                    <canvas id="gridCanvas"></canvas>
+                </div>
+            </div>
+            <div class="zoom-controls">
+                <button class="zoom-btn" onclick="adjustZoom(-0.1)">-</button>
+                <button class="zoom-btn" onclick="adjustZoom(0.1)">+</button>
+            </div>
         </div>
     </div>
 
     <script>
-        // 设置默认日期
+        // --- 新增：开场动画逻辑 ---
+        function enterApp() {
+            const introLayer = document.getElementById('intro-layer');
+            const mainApp = document.getElementById('mainApp');
+            
+            // 1. 淡出开场页
+            introLayer.classList.add('fade-out');
+            
+            // 2. 显示主应用
+            mainApp.classList.add('visible');
+            
+            // 3. 延迟生成一次网格，确保 Canvas 尺寸正确
+            setTimeout(() => {
+                generateGrid();
+                introLayer.style.display = 'none'; // 彻底移除，防止挡住点击
+            }, 1000);
+        }
+
+        // --- 原有逻辑 ---
         const today = new Date();
         const yyyy = today.getFullYear();
         const mm = String(today.getMonth() + 1).padStart(2, '0');
@@ -537,7 +701,11 @@
 
         function generateGrid() {
             const startVal = document.getElementById("startDateInput").value;
-            if (!startVal) { alert("Please select a start date."); return; }
+            if (!startVal) { 
+                // 如果在开场动画前调用，可能没有值，忽略错误
+                if (document.getElementById('intro-layer').style.display !== 'none') return;
+                alert("Please select a start date."); return; 
+            }
             
             const startDate = new Date(startVal + "T00:00:00");
             let endDate;
@@ -687,7 +855,7 @@
             paper.style.marginBottom = `${marginAdjustment}mm`;
         }
 
-        setTimeout(generateGrid, 200);
+        // 注意：这里不再自动调用 generateGrid，改为在 enterApp 后调用，避免开场时后台计算
     </script>
 </body>
 </html>
